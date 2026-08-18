@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import Anthropic from '@anthropic-ai/sdk';
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,6 +18,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'No content provided' },
         { status: 400 }
+      );
+    }
+
+    if (!ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        { error: 'ANTHROPIC_API_KEY not configured' },
+        { status: 500 }
       );
     }
 
@@ -106,24 +110,41 @@ Respond ONLY with a valid JSON object. No markdown, no explanation. Format:
       ]
     }
   ]
-}
+}`;
 
-Only include exercise types from: ${exerciseTypes.join(', ')}. Each lesson must have exactly 4 exercises. Make exercises relevant to the content.`;
-
-    const message = await client.messages.create({
-      model: 'claude-opus-4-20250805',
-      max_tokens: 4000,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-20250805',
+        max_tokens: 4000,
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+      }),
     });
 
-    let courseJson = message.content
-      .filter((block) => block.type === 'text')
-      .map((block) => (block.type === 'text' ? block.text : ''))
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('Anthropic API error:', error);
+      return NextResponse.json(
+        { error: 'Failed to generate course with Claude API' },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    
+    let courseJson = data.content
+      .filter((block: any) => block.type === 'text')
+      .map((block: any) => block.text)
       .join('');
 
     // Clean up JSON response
