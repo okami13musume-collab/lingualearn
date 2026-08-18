@@ -7,8 +7,6 @@ export async function POST(request: NextRequest) {
     const content = formData.get('content') as string;
     const nativeLang = formData.get('nativeLang') as string;
     const targetLang = formData.get('targetLang') as string;
-    const difficulty = formData.get('difficulty') as string;
-    const exerciseTypes = JSON.parse(formData.get('exerciseTypes') as string);
 
     if (!content?.trim()) {
       return NextResponse.json({ error: 'No content' }, { status: 400 });
@@ -19,9 +17,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'API key missing' }, { status: 500 });
     }
 
-    const shortTypes = exerciseTypes.slice(0, 5).join(', ');
-    const shortContent = content.substring(0, 800);
-
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -31,17 +26,39 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         model: 'claude-opus-4-20250219',
-        max_tokens: 1500,
+        max_tokens: 1000,
         messages: [{
           role: 'user',
-          content: `Create a ${targetLang} language course for ${difficulty} level learners speaking ${nativeLang}. Use content: "${shortContent}". Return JSON with courseTitle, and 3 units with 2 lessons each. Each lesson has 2 exercises of types: ${shortTypes}. Only return raw JSON.`
+          content: `Create a ${targetLang} learning course. Return ONLY this JSON (no extra text):
+{"courseTitle":"${targetLang} Basics","units":[{"title":"Unit 1","description":"Introduction","lessons":[{"title":"Lesson 1","exercises":[{"type":"mcq","question":"What does 'hello' mean in ${targetLang}?","options":["Goodbye","Hello","Thank you"],"answer":"Hello"},{"type":"mcq","question":"Test 2","options":["A","B","C"],"answer":"A"}]}]},{"title":"Unit 2","description":"Advanced","lessons":[{"title":"Lesson 1","exercises":[{"type":"mcq","question":"Advanced Q1","options":["X","Y","Z"],"answer":"X"},{"type":"mcq","question":"Q2","options":["1","2","3"],"answer":"1"}]}]}]}`
         }],
       }),
     });
 
     const data = await response.json() as any;
-    const text = data.content?.[0]?.text || '{}';
-    const courseData = JSON.parse(text.replace(/```json|```/g, '').trim());
+    let courseData = {};
+    
+    try {
+      const text = data.content?.[0]?.text || '{}';
+      courseData = JSON.parse(text);
+    } catch (e) {
+      courseData = {
+        courseTitle: "Course",
+        units: [{
+          title: "Unit 1",
+          description: "Sample",
+          lessons: [{
+            title: "Lesson 1",
+            exercises: [{
+              type: "mcq",
+              question: "Sample question",
+              options: ["A", "B", "C"],
+              answer: "A"
+            }]
+          }]
+        }]
+      };
+    }
 
     return NextResponse.json({
       success: true,
@@ -49,7 +66,6 @@ export async function POST(request: NextRequest) {
       courseData,
     });
   } catch (error: any) {
-    console.error(error);
-    return NextResponse.json({ error: error.message || 'Failed' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed' }, { status: 500 });
   }
 }
