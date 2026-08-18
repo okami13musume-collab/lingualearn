@@ -1,9 +1,0 @@
-.container { max-width: 680px; margin: 0 auto; padding: 0; min-height: 100vh; display: flex; flex-direction: column; }
-.header { display: flex; align-items: center; gap: 12px; padding: 1rem; border-bottom: 0.5px solid var(--color-border-tertiary); background: var(--color-background-primary); position: sticky; top: 0; z-index: 10; }
-.closeBtn { font-size: 20px; color: var(--color-text-secondary); cursor: pointer; padding: 4px; border: none; background: none; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-.closeBtn:hover { color: var(--color-text-primary); }
-.progressBar { flex: 1; height: 8px; background: var(--color-background-secondary); border-radius: 4px; overflow: hidden; }
-.progressFill { height: 100%; background: #5340C0; border-radius: 4px; transition: width 0.3s ease; }
-.lives { display: flex; gap: 4px; flex-shrink: 0; }
-.heart { font-size: 18px; display: inline-block; transition: opacity 0.2s; }
-.body { flex: 1; padding: 2rem 1rem; overflow-y: auto; }
