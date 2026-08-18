@@ -1,0 +1,10 @@
+.container { max-width: 680px; margin: 0 auto; padding: 2rem 1rem; text-align: center; display: flex; flex-direction: column; min-height: 100vh; justify-content: center; }
+.header { margin-bottom: 2rem; }
+.icon { font-size: 80px; margin-bottom: 1rem; }
+.header h2 { font-size: 24px; font-weight: 500; margin-bottom: 0.5rem; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 2rem 0; }
+.statBox { background: var(--color-background-secondary); border-radius: 8px; padding: 1rem; }
+.statValue { font-size: 28px; font-weight: 600; color: #5340C0; }
+.statLabel { font-size: 12px; color: var(--color-text-secondary); margin-top: 0.5rem; }
+.continueBtn { width: 100%; padding: 14px; font-size: 15px; font-weight: 500; border-radius: 8px; border: none; background: #5340C0; color: #fff; cursor: pointer; transition: 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; margin: 1.5rem 0 1rem; }
+.continueBtn:hover { background: #3C3489; }

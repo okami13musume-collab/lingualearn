@@ -1,0 +1,32 @@
+.container { max-width: 680px; margin: 0 auto; padding: 2rem 1rem; }
+.hero { text-align: center; padding: 2rem 1rem 1.5rem; }
+.logo { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; }
+.logoIcon { width: 48px; height: 48px; border-radius: 14px; background: #5340C0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px; }
+.logoText { font-size: 22px; font-weight: 500; letter-spacing: -0.5px; }
+.hero h1 { font-size: 26px; font-weight: 500; line-height: 1.3; margin-bottom: 0.5rem; }
+.hero p { font-size: 15px; color: var(--color-text-secondary); margin-bottom: 1.5rem; }
+.uploadZone { border: 1.5px dashed var(--color-border-secondary); border-radius: var(--border-radius-lg); padding: 2.5rem 1.5rem; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--color-background-secondary); margin-bottom: 1rem; }
+.uploadZone:hover { border-color: #5340C0; background: #EEEDFE; }
+.uploadZone.drag { border-color: #5340C0; background: #EEEDFE; }
+.uploadZone i { font-size: 36px; color: #5340C0; display: block; margin-bottom: 0.75rem; }
+.uploadZone h3 { font-size: 16px; font-weight: 500; margin-bottom: 0.25rem; }
+.uploadZone p { font-size: 13px; color: var(--color-text-secondary); }
+.fileTypes { display: flex; gap: 8px; justify-content: center; margin-top: 1rem; flex-wrap: wrap; }
+.fileBadge { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; background: var(--color-background-primary); border: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary); }
+.textarea { width: 100%; min-height: 120px; padding: 12px; font-size: 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); font-family: inherit; resize: vertical; line-height: 1.6; margin-bottom: 1rem; }
+.textarea:focus { outline: none; border-color: #5340C0; box-shadow: 0 0 0 3px rgba(83, 64, 192, 0.12); }
+.textarea::placeholder { color: var(--color-text-secondary); }
+.langRow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: flex-end; gap: 8px; margin: 1rem 0; }
+.select { width: 100%; padding: 10px 12px; font-size: 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); font-family: inherit; cursor: pointer; }
+.select:focus { outline: none; border-color: #5340C0; }
+.sectionLabel { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin: 1rem 0 0.5rem; }
+.exerciseGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1rem; }
+.exChip { padding: 12px 8px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); text-align: center; cursor: pointer; font-size: 12px; color: var(--color-text-secondary); transition: 0.15s; line-height: 1.3; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.exChip i { font-size: 18px; }
+.exChip:hover { background: var(--color-background-secondary); }
+.exChip.selected { background: #EEEDFE; border-color: #5340C0; color: #3C3489; }
+.errorMsg { color: #A32D2D; font-size: 13px; text-align: center; margin-top: 0.5rem; margin-bottom: 1rem; padding: 10px; background: #FCEBEB; border: 1px solid #F09595; border-radius: var(--border-radius-md); }
+.btnPrimary { width: 100%; padding: 14px; font-size: 15px; font-weight: 500; border-radius: var(--border-radius-md); border: none; background: #5340C0; color: #fff; cursor: pointer; transition: 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btnPrimary:hover:not(:disabled) { background: #3C3489; }
+.btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btnPrimary i { font-size: 16px; }
