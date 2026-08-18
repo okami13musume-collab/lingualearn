@@ -23,10 +23,11 @@ Return JSON: {"courseTitle":"Course","units":[{"title":"U1","description":"D","l
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-      },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
       body: JSON.stringify({
         model: 'claude-opus-4-20250219',
         max_tokens: 1000,
