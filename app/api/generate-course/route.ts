@@ -29,7 +29,7 @@ Return JSON: {"courseTitle":"Course","units":[{"title":"U1","description":"D","l
       'anthropic-version': '2023-06-01',
     },
       body: JSON.stringify({
-        model: 'claude-opus-4-20250219',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }],
       }),
