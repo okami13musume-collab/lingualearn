@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const content = (formData.get('content') as string) || '';
-    const nativeLang = (formData.get('nativeLang') as string) || 'English';
     const targetLang = (formData.get('targetLang') as string) || 'Spanish';
 
     if (!content.trim()) {
-      return NextResponse.json({ error: 'No content provided' }, { status: 400 });
+      return NextResponse.json({ error: 'No content' }, { status: 400 });
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -18,90 +16,45 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'API key missing' }, { status: 500 });
     }
 
-    const client = new Anthropic({ apiKey });
+    const prompt = `Create a course from this vocabulary:
+${content.substring(0, 500)}
 
-    const prompt = `Create a language learning course from this vocabulary:
+Return JSON: {"courseTitle":"Course","units":[{"title":"U1","description":"D","lessons":[{"title":"L1","exercises":[{"type":"mcq","question":"Q1?","options":["A","B","C"],"answer":"A"}]}]}]}`;
 
-${content}
-
-Return ONLY this JSON structure (no markdown, no extra text):
-{
-  "courseTitle": "Vocabulary Course",
-  "units": [
-    {
-      "title": "Unit 1",
-      "description": "Learn vocabulary",
-      "lessons": [
-        {
-          "title": "Lesson 1",
-          "exercises": [
-            {"type": "mcq", "question": "What does X mean?", "options": ["A", "B", "C"], "answer": "A", "explanation": "Because..."}
-          ]
-        }
-      ]
-    }
-  ]
-}`;
-
-    const message = await client.messages.create({
-      model: 'claude-opus-4-20250219',
-      max_tokens: 2000,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-20250219',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }],
+      }),
     });
 
-    let courseData = null;
-    const textContent = message.content[0];
-
-    if (textContent && textContent.type === 'text') {
-      try {
-        const cleanJson = textContent.text
-          .replace(/```json\n?/g, '')
-          .replace(/```\n?/g, '')
-          .trim();
-        
-        courseData = JSON.parse(cleanJson);
-      } catch (parseError) {
-        console.error('Parse failed:', parseError);
-      }
+    const data = await response.json() as any;
+    
+    if (!response.ok) {
+      console.error('API error:', data);
+      throw new Error(`API returned ${response.status}: ${JSON.stringify(data)}`);
     }
 
-    if (!courseData?.units) {
-      return NextResponse.json({
-        success: true,
-        courseId: uuidv4(),
-        courseData: {
-          courseTitle: `${targetLang} Course`,
-          units: [{
-            title: 'Unit 1',
-            description: 'Course content',
-            lessons: [{
-              title: 'Lesson 1',
-              exercises: [{
-                type: 'mcq',
-                question: 'Your course is being generated',
-                options: ['Please try again', 'Refresh page', 'Check console'],
-                answer: 'Please try again',
-              }],
-            }],
-          }],
-        },
-      });
+    let courseData = null;
+    try {
+      const text = data.content?.[0]?.text || '';
+      courseData = JSON.parse(text);
+    } catch (e) {
+      console.error('Parse error, text was:', data.content?.[0]?.text);
     }
 
     return NextResponse.json({
       success: true,
       courseId: uuidv4(),
-      courseData,
+      courseData: courseData || { courseTitle: targetLang, units: [] },
     });
   } catch (error: any) {
-    console.error('Error:', error);
-    return NextResponse.json({
-      error: `Error: ${error.message}`,
-    }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
