@@ -1,52 +1,97 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Anthropic from '@anthropic-ai/sdk';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const targetLang = (formData.get('targetLang') as string) || 'Russian';
+    const content = (formData.get('content') as string) || '';
+    const nativeLang = (formData.get('nativeLang') as string) || 'English';
+    const targetLang = (formData.get('targetLang') as string) || 'Spanish';
 
-    const courseData = {
-      courseTitle: `${targetLang} Vocabulary Mastery`,
-      units: [
+    if (!content.trim()) {
+      return NextResponse.json({ error: 'No content provided' }, { status: 400 });
+    }
+
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({ error: 'API key missing' }, { status: 500 });
+    }
+
+    const client = new Anthropic({ apiKey });
+
+    const prompt = `Create a language learning course from this vocabulary:
+
+${content}
+
+Return ONLY this JSON structure (no markdown, no extra text):
+{
+  "courseTitle": "Vocabulary Course",
+  "units": [
+    {
+      "title": "Unit 1",
+      "description": "Learn vocabulary",
+      "lessons": [
         {
-          title: "Unit 1: Food & Drinks",
-          description: "Learn essential food vocabulary",
-          lessons: [
-            {
-              title: "Lesson 1: Vegetables & Fruits",
-              exercises: [
-                { type: "mcq", question: "What is 'овощи'?", options: ["Vegetables", "Fruit", "Bread"], answer: "Vegetables", explanation: "овощи means vegetables" },
-                { type: "mcq", question: "What is 'фрукты'?", options: ["Vegetables", "Fruit", "Meat"], answer: "Fruit", explanation: "фрукты means fruit" },
-                { type: "fill", question: "Type the word for banana", answer: "банан", hint: "Starts with б" }
-              ]
-            },
-            {
-              title: "Lesson 2: Dairy & Proteins",
-              exercises: [
-                { type: "mcq", question: "What is 'молоко'?", options: ["Juice", "Milk", "Water"], answer: "Milk", explanation: "молоко means milk" },
-                { type: "mcq", question: "What is 'сыр'?", options: ["Butter", "Cheese", "Bread"], answer: "Cheese", explanation: "сыр means cheese" },
-                { type: "flash", front: "яйца", back: "eggs" }
-              ]
-            }
-          ]
-        },
-        {
-          title: "Unit 2: Beverages & Meals",
-          description: "Learn drinks and dishes",
-          lessons: [
-            {
-              title: "Lesson 1: Drinks",
-              exercises: [
-                { type: "mcq", question: "What is 'кофе'?", options: ["Tea", "Coffee", "Water"], answer: "Coffee", explanation: "кофе means coffee" },
-                { type: "mcq", question: "What is 'чай'?", options: ["Coffee", "Tea", "Juice"], answer: "Tea", explanation: "чай means tea" },
-                { type: "fill", question: "Type the word for water", answer: "вода", hint: "Starts with в" }
-              ]
-            }
+          "title": "Lesson 1",
+          "exercises": [
+            {"type": "mcq", "question": "What does X mean?", "options": ["A", "B", "C"], "answer": "A", "explanation": "Because..."}
           ]
         }
       ]
-    };
+    }
+  ]
+}`;
+
+    const message = await client.messages.create({
+      model: 'claude-opus-4-20250219',
+      max_tokens: 2000,
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+    });
+
+    let courseData = null;
+    const textContent = message.content[0];
+
+    if (textContent && textContent.type === 'text') {
+      try {
+        const cleanJson = textContent.text
+          .replace(/```json\n?/g, '')
+          .replace(/```\n?/g, '')
+          .trim();
+        
+        courseData = JSON.parse(cleanJson);
+      } catch (parseError) {
+        console.error('Parse failed:', parseError);
+      }
+    }
+
+    if (!courseData?.units) {
+      return NextResponse.json({
+        success: true,
+        courseId: uuidv4(),
+        courseData: {
+          courseTitle: `${targetLang} Course`,
+          units: [{
+            title: 'Unit 1',
+            description: 'Course content',
+            lessons: [{
+              title: 'Lesson 1',
+              exercises: [{
+                type: 'mcq',
+                question: 'Your course is being generated',
+                options: ['Please try again', 'Refresh page', 'Check console'],
+                answer: 'Please try again',
+              }],
+            }],
+          }],
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -54,6 +99,9 @@ export async function POST(request: NextRequest) {
       courseData,
     });
   } catch (error: any) {
-    return NextResponse.json({ error: 'Failed' }, { status: 500 });
+    console.error('Error:', error);
+    return NextResponse.json({
+      error: `Error: ${error.message}`,
+    }, { status: 500 });
   }
 }
