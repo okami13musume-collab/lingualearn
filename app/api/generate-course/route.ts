@@ -18,52 +18,64 @@ export async function POST(request: NextRequest) {
       return { word, translation };
     }).filter(pair => pair.word && pair.translation);
 
-    // Create exercises from vocabulary
-    const exercises = vocabPairs.slice(0, 4).map((pair, idx) => {
-      if (idx % 2 === 0) {
-        // Multiple choice - use other vocab as wrong answers
-        const wrongAnswers = vocabPairs
-          .filter((_, i) => i !== idx)
-          .slice(0, 2)
-          .map(p => p.translation);
+    if (vocabPairs.length === 0) {
+      return NextResponse.json({ error: 'No valid vocabulary found' }, { status: 400 });
+    }
+
+    // Create lessons with 10 questions each
+    const questionsPerLesson = 10;
+    const lessons = [];
+    
+    let questionIndex = 0;
+    while (questionIndex < vocabPairs.length) {
+      const exercisesForLesson = [];
+      
+      // Create 10 questions for this lesson
+      for (let i = 0; i < questionsPerLesson && questionIndex < vocabPairs.length; i++) {
+        const currentPair = vocabPairs[questionIndex % vocabPairs.length];
         
-        const options = [pair.translation, ...wrongAnswers].sort(() => Math.random() - 0.5);
+        if (i % 2 === 0) {
+          // MCQ exercise
+          const wrongAnswers = vocabPairs
+            .filter((_, idx) => idx !== (questionIndex % vocabPairs.length))
+            .slice(0, 2)
+            .map(p => p.translation);
+          
+          const options = [currentPair.translation, ...wrongAnswers].sort(() => Math.random() - 0.5);
+          
+          exercisesForLesson.push({
+            type: 'mcq',
+            question: `What does "${currentPair.word}" mean?`,
+            options,
+            answer: currentPair.translation,
+            explanation: `${currentPair.word} = ${currentPair.translation}`,
+          });
+        } else {
+          // Fill in the blank exercise
+          exercisesForLesson.push({
+            type: 'fill',
+            question: `Type the word for: ${currentPair.translation}`,
+            answer: currentPair.word,
+            hint: `Starts with ${currentPair.word[0]}`,
+          });
+        }
         
-        return {
-          type: 'mcq',
-          question: `What does "${pair.word}" mean?`,
-          options,
-          answer: pair.translation,
-          explanation: `${pair.word} = ${pair.translation}`,
-        };
-      } else {
-        // Fill in the blank
-        return {
-          type: 'fill',
-          question: `Type the word for: ${pair.translation}`,
-          answer: pair.word,
-          hint: `Starts with ${pair.word[0]}`,
-        };
+        questionIndex++;
       }
-    });
+      
+      lessons.push({
+        title: `Lesson ${lessons.length + 1}`,
+        exercises: exercisesForLesson,
+      });
+    }
 
     const courseData = {
       courseTitle: `${targetLang} Vocabulary`,
       units: [
         {
           title: 'Unit 1: Your Vocabulary',
-          description: 'Learn from your uploaded content',
-          lessons: [
-            {
-              title: 'Lesson 1: Vocabulary Practice',
-              exercises: exercises.length > 0 ? exercises : [{
-                type: 'mcq',
-                question: 'Learning vocabulary',
-                options: ['Continue', 'Practice more', 'Review'],
-                answer: 'Continue',
-              }],
-            },
-          ],
+          description: `Learn ${vocabPairs.length} vocabulary words`,
+          lessons,
         },
       ],
     };
@@ -74,6 +86,7 @@ export async function POST(request: NextRequest) {
       courseData,
     });
   } catch (error: any) {
+    console.error('Error:', error);
     return NextResponse.json(
       { error: 'Failed to generate course' },
       { status: 500 }
