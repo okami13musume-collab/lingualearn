@@ -14,6 +14,7 @@ export default function ExerciseRenderer({
 }: ExerciseRendererProps) {
   const [answered, setAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [fillAnswer, setFillAnswer] = useState('');
 
   if (exercise.type === 'mcq') {
     return (
@@ -53,22 +54,20 @@ export default function ExerciseRenderer({
   }
 
   if (exercise.type === 'fill') {
-    const [answer, setAnswer] = useState('');
-    
     return (
       <div>
         <h3 className={styles.question}>{exercise.question}</h3>
         <input
           type="text"
           placeholder="Type your answer…"
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
+          value={fillAnswer}
+          onChange={(e) => setFillAnswer(e.target.value)}
           className={styles.textInput}
         />
         <button
           className={styles.checkBtn}
           onClick={() => {
-            const isCorrect = answer.toLowerCase().trim() === exercise.answer.toLowerCase().trim();
+            const isCorrect = fillAnswer.toLowerCase().trim() === exercise.answer.toLowerCase().trim();
             setTimeout(() => onCheckAnswer(isCorrect), 500);
           }}
         >
