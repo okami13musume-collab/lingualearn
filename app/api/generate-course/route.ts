@@ -19,16 +19,33 @@ export async function POST(request: NextRequest) {
     }).filter(pair => pair.word && pair.translation);
 
     // Create exercises from vocabulary
-    const exercises = vocabPairs.slice(0, 4).map((pair, idx) => ({
-      type: idx % 2 === 0 ? 'mcq' : 'fill',
-      question: idx % 2 === 0 
-        ? `What does "${pair.word}" mean?`
-        : `Type the word for: ${pair.translation}`,
-      options: idx % 2 === 0 ? [pair.translation, 'Wrong1', 'Wrong2'] : undefined,
-      answer: pair.translation,
-      hint: idx % 2 === 0 ? undefined : `Starts with ${pair.word[0]}`,
-      explanation: idx % 2 === 0 ? `${pair.word} = ${pair.translation}` : undefined,
-    }));
+    const exercises = vocabPairs.slice(0, 4).map((pair, idx) => {
+      if (idx % 2 === 0) {
+        // Multiple choice - use other vocab as wrong answers
+        const wrongAnswers = vocabPairs
+          .filter((_, i) => i !== idx)
+          .slice(0, 2)
+          .map(p => p.translation);
+        
+        const options = [pair.translation, ...wrongAnswers].sort(() => Math.random() - 0.5);
+        
+        return {
+          type: 'mcq',
+          question: `What does "${pair.word}" mean?`,
+          options,
+          answer: pair.translation,
+          explanation: `${pair.word} = ${pair.translation}`,
+        };
+      } else {
+        // Fill in the blank
+        return {
+          type: 'fill',
+          question: `Type the word for: ${pair.translation}`,
+          answer: pair.word,
+          hint: `Starts with ${pair.word[0]}`,
+        };
+      }
+    });
 
     const courseData = {
       courseTitle: `${targetLang} Vocabulary`,
