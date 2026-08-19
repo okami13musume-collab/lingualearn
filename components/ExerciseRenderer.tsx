@@ -15,6 +15,7 @@ export default function ExerciseRenderer({
   const [answered, setAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [fillAnswer, setFillAnswer] = useState('');
+  const [isCorrect, setIsCorrect] = useState(false);
 
   if (exercise.type === 'mcq') {
     return (
@@ -37,10 +38,11 @@ export default function ExerciseRenderer({
               }`}
               onClick={() => {
                 if (answered) return;
-                const isCorrect = option === exercise.answer;
+                const correct = option === exercise.answer;
                 setSelectedAnswer(option);
                 setAnswered(true);
-                setTimeout(() => onCheckAnswer(isCorrect), 500);
+                setIsCorrect(correct);
+                setTimeout(() => onCheckAnswer(correct), 500);
               }}
               disabled={answered}
             >
@@ -49,6 +51,11 @@ export default function ExerciseRenderer({
             </button>
           ))}
         </div>
+        {answered && (
+          <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '14px', color: isCorrect ? '#0F6E56' : '#A32D2D' }}>
+            {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
+          </div>
+        )}
       </div>
     );
   }
@@ -63,15 +70,29 @@ export default function ExerciseRenderer({
           value={fillAnswer}
           onChange={(e) => setFillAnswer(e.target.value)}
           className={styles.textInput}
+          disabled={answered}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter' && !answered) {
+              const correct = fillAnswer.toLowerCase().trim() === exercise.answer.toLowerCase().trim();
+              setAnswered(true);
+              setIsCorrect(correct);
+              setTimeout(() => onCheckAnswer(correct), 500);
+            }
+          }}
         />
         <button
           className={styles.checkBtn}
           onClick={() => {
-            const isCorrect = fillAnswer.toLowerCase().trim() === exercise.answer.toLowerCase().trim();
-            setTimeout(() => onCheckAnswer(isCorrect), 500);
+            if (!answered) {
+              const correct = fillAnswer.toLowerCase().trim() === exercise.answer.toLowerCase().trim();
+              setAnswered(true);
+              setIsCorrect(correct);
+              setTimeout(() => onCheckAnswer(correct), 500);
+            }
           }}
+          disabled={answered}
         >
-          Submit
+          {answered ? (isCorrect ? '✓ Correct!' : '✗ Try again') : 'Submit'}
         </button>
       </div>
     );
@@ -87,7 +108,7 @@ export default function ExerciseRenderer({
         </div>
         {answered && (
           <button className={styles.checkBtn} onClick={() => onCheckAnswer(true)}>
-            Got it! Continue
+            Got it! Continue →
           </button>
         )}
       </div>
