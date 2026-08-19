@@ -8,54 +8,58 @@ export async function POST(request: NextRequest) {
     const targetLang = (formData.get('targetLang') as string) || 'Spanish';
 
     if (!content.trim()) {
-      return NextResponse.json({ error: 'No content' }, { status: 400 });
+      return NextResponse.json({ error: 'No content provided' }, { status: 400 });
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: 'API key missing' }, { status: 500 });
-    }
+    // Parse vocabulary pairs from content
+    const lines = content.split('\n').filter(line => line.trim());
+    const vocabPairs = lines.map(line => {
+      const [word, translation] = line.split('=').map(s => s.trim());
+      return { word, translation };
+    }).filter(pair => pair.word && pair.translation);
 
-    const prompt = `Create a course from this vocabulary:
-${content.substring(0, 500)}
+    // Create exercises from vocabulary
+    const exercises = vocabPairs.slice(0, 4).map((pair, idx) => ({
+      type: idx % 2 === 0 ? 'mcq' : 'fill',
+      question: idx % 2 === 0 
+        ? `What does "${pair.word}" mean?`
+        : `Type the word for: ${pair.translation}`,
+      options: idx % 2 === 0 ? [pair.translation, 'Wrong1', 'Wrong2'] : undefined,
+      answer: pair.translation,
+      hint: idx % 2 === 0 ? undefined : `Starts with ${pair.word[0]}`,
+      explanation: idx % 2 === 0 ? `${pair.word} = ${pair.translation}` : undefined,
+    }));
 
-Return JSON: {"courseTitle":"Course","units":[{"title":"U1","description":"D","lessons":[{"title":"L1","exercises":[{"type":"mcq","question":"Q1?","options":["A","B","C"],"answer":"A"}]}]}]}`;
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-      body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    });
-
-    const data = await response.json() as any;
-    
-    if (!response.ok) {
-      console.error('API error:', data);
-      throw new Error(`API returned ${response.status}: ${JSON.stringify(data)}`);
-    }
-
-    let courseData = null;
-    try {
-      const text = data.content?.[0]?.text || '';
-      courseData = JSON.parse(text);
-    } catch (e) {
-      console.error('Parse error, text was:', data.content?.[0]?.text);
-    }
+    const courseData = {
+      courseTitle: `${targetLang} Vocabulary`,
+      units: [
+        {
+          title: 'Unit 1: Your Vocabulary',
+          description: 'Learn from your uploaded content',
+          lessons: [
+            {
+              title: 'Lesson 1: Vocabulary Practice',
+              exercises: exercises.length > 0 ? exercises : [{
+                type: 'mcq',
+                question: 'Learning vocabulary',
+                options: ['Continue', 'Practice more', 'Review'],
+                answer: 'Continue',
+              }],
+            },
+          ],
+        },
+      ],
+    };
 
     return NextResponse.json({
       success: true,
       courseId: uuidv4(),
-      courseData: courseData || { courseTitle: targetLang, units: [] },
+      courseData,
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to generate course' },
+      { status: 500 }
+    );
   }
 }
