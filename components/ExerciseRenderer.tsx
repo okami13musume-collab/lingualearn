@@ -52,14 +52,31 @@ export default function ExerciseRenderer({
     );
   }
 
-  if (exercise.type === 'fill') {
+if (exercise.type === 'fill') {
+    const [answer, setAnswer] = React.useState('');
     return (
       <div>
         <h3 className={styles.question}>{exercise.question}</h3>
         <input
           type="text"
           placeholder="Type your answer…"
-          onKeyPress={(e) => {
+          value={answer}
+          onChange={(e) => setAnswer(e.target.value)}
+          className={styles.textInput}
+        />
+        <button 
+          className={styles.checkBtn}
+          onClick={() => {
+            const isCorrect = answer.toLowerCase().trim() === exercise.answer.toLowerCase().trim();
+            setAnswered(true);
+            setTimeout(() => onCheckAnswer(isCorrect), 500);
+          }}
+        >
+          Submit
+        </button>
+      </div>
+    );
+  }
             if (e.key === 'Enter' && !answered) {
               const isCorrect = (e.target as HTMLInputElement).value.toLowerCase() === exercise.answer.toLowerCase();
               setAnswered(true);
