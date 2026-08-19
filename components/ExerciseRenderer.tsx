@@ -37,14 +37,16 @@ export default function ExerciseRenderer({
                   : ''
               }`}
               onClick={() => {
-                if (answered) return;
+                if (answered) {
+                  onCheckAnswer(isCorrect);
+                  return;
+                }
                 const correct = option === exercise.answer;
                 setSelectedAnswer(option);
                 setAnswered(true);
                 setIsCorrect(correct);
                 setTimeout(() => onCheckAnswer(correct), 500);
               }}
-              disabled={answered}
             >
               <span className={styles.letter}>{String.fromCharCode(65 + idx)}</span>
               {option}
@@ -53,7 +55,7 @@ export default function ExerciseRenderer({
         </div>
         {answered && (
           <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '14px', color: isCorrect ? '#0F6E56' : '#A32D2D' }}>
-            {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
+            {isCorrect ? '✓ Correct! Tap an answer to continue.' : '✗ Incorrect. Try again!'}
           </div>
         )}
       </div>
@@ -88,11 +90,12 @@ export default function ExerciseRenderer({
               setAnswered(true);
               setIsCorrect(correct);
               setTimeout(() => onCheckAnswer(correct), 500);
+            } else {
+              onCheckAnswer(isCorrect);
             }
           }}
-          disabled={answered}
         >
-          {answered ? (isCorrect ? '✓ Correct!' : '✗ Try again') : 'Submit'}
+          {answered ? (isCorrect ? '✓ Correct! Continue →' : '✗ Try again') : 'Submit'}
         </button>
       </div>
     );
