@@ -14,6 +14,7 @@ export default function ExerciseRenderer({
 }: ExerciseRendererProps) {
   const [answered, setAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [fillAnswer, setFillAnswer] = useState('');
 
   if (exercise.type === 'mcq') {
     return (
@@ -52,39 +53,29 @@ export default function ExerciseRenderer({
     );
   }
 
-if (exercise.type === 'fill') {
-    const [answer, setAnswer] = React.useState('');
+  if (exercise.type === 'fill') {
     return (
       <div>
         <h3 className={styles.question}>{exercise.question}</h3>
         <input
           type="text"
           placeholder="Type your answer…"
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
+          value={fillAnswer}
+          onChange={(e) => setFillAnswer(e.target.value)}
           className={styles.textInput}
+          disabled={answered}
         />
-        <button 
+        <button
           className={styles.checkBtn}
           onClick={() => {
-            const isCorrect = answer.toLowerCase().trim() === exercise.answer.toLowerCase().trim();
+            const isCorrect = fillAnswer.toLowerCase().trim() === exercise.answer.toLowerCase().trim();
             setAnswered(true);
             setTimeout(() => onCheckAnswer(isCorrect), 500);
           }}
+          disabled={answered}
         >
-          Submit
+          {answered ? 'Next' : 'Submit'}
         </button>
-      </div>
-    );
-  }
-            if (e.key === 'Enter' && !answered) {
-              const isCorrect = (e.target as HTMLInputElement).value.toLowerCase() === exercise.answer.toLowerCase();
-              setAnswered(true);
-              setTimeout(() => onCheckAnswer(isCorrect), 500);
-            }
-          }}
-          className={styles.textInput}
-        />
       </div>
     );
   }
