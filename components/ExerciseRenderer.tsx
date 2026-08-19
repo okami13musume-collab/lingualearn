@@ -55,7 +55,7 @@ export default function ExerciseRenderer({
         </div>
         {answered && (
           <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '14px', color: isCorrect ? '#0F6E56' : '#A32D2D' }}>
-            {isCorrect ? '✓ Correct! Tap an answer to continue.' : '✗ Incorrect. Try again!'}
+            {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
           </div>
         )}
       </div>
@@ -72,15 +72,6 @@ export default function ExerciseRenderer({
           value={fillAnswer}
           onChange={(e) => setFillAnswer(e.target.value)}
           className={styles.textInput}
-          disabled={answered}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter' && !answered) {
-              const correct = fillAnswer.toLowerCase().trim() === exercise.answer.toLowerCase().trim();
-              setAnswered(true);
-              setIsCorrect(correct);
-              setTimeout(() => onCheckAnswer(correct), 500);
-            }
-          }}
         />
         <button
           className={styles.checkBtn}
@@ -95,7 +86,7 @@ export default function ExerciseRenderer({
             }
           }}
         >
-          {answered ? (isCorrect ? '✓ Correct! Continue →' : '✗ Try again') : 'Submit'}
+          {answered ? (isCorrect ? '✓ Correct! Continue →' : '✗ Incorrect. Try again') : 'Submit'}
         </button>
       </div>
     );
